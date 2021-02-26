@@ -33,4 +33,18 @@
         android:layout_toEndOf="@+id/ivProfileImage"
         tools:text="This is tweet 101" />
 
+    <TextView
+        android:id="@+id/tvDate"
+        android:layout_width="77dp"
+        android:layout_height="wrap_content"
+        android:layout_alignBottom="@+id/tvScreenName"
+        android:layout_alignParentTop="true"
+        android:layout_alignParentEnd="true"
+        android:layout_marginStart="200dp"
+        android:layout_marginTop="6dp"
+        android:layout_marginEnd="13dp"
+        android:layout_marginBottom="0dp"
+        android:layout_toEndOf="@+id/tvScreenName"
+        tools:text="time" />
+
 </RelativeLayout>

@@ -7,6 +7,7 @@ import androidx.swiperefreshlayout.widget.SwipeRefreshLayout;
 
 import android.os.Bundle;
 import android.util.Log;
+import android.widget.LinearLayout;
 
 import com.codepath.apps.restclienttemplate.models.Tweet;
 import com.codepath.asynchttpclient.callback.JsonHttpResponseHandler;
@@ -28,6 +29,7 @@ public class TimelineActivity extends AppCompatActivity {
     List<Tweet> tweets;
     TweetAdapter adapter;
     SwipeRefreshLayout swipeContainer;
+    EndlessRecyclerViewScrollListener scrollListener;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -55,10 +57,49 @@ public class TimelineActivity extends AppCompatActivity {
         //init the list of tweets and adapter
         tweets =new ArrayList<>();
         adapter = new TweetAdapter(this, tweets);
+        LinearLayoutManager layoutManager = new LinearLayoutManager(this);
         //recycler view setup layout manager and the apdapter
-        rvTweets.setLayoutManager(new LinearLayoutManager(this));
+        rvTweets.setLayoutManager(layoutManager);
         rvTweets.setAdapter(adapter);
+
+        scrollListener = new EndlessRecyclerViewScrollListener(layoutManager) {
+            @Override
+            public void onLoadMore(int page, int totalItemsCount, RecyclerView view) {
+                Log.i(TAG, "onLoad more " + page);
+                loadMoreData();
+            }
+        };
+        // Adds the scroll listener to RecyclerView
+        rvTweets.addOnScrollListener(scrollListener);
+
         populateHomeTimeLine();
+    }
+
+    private void loadMoreData() {
+        // 1. Send an API request to retrieve appropriate paginated data
+            client.getNextPageOfTweets(new JsonHttpResponseHandler() {
+                @Override
+                public void onSuccess(int statusCode, Headers headers, JSON json) {
+                    Log.i(TAG, "onSuccess for load more data "+ json.toString());
+                    // 2. Deserialize and construct new model objects from the API response
+                    JSONArray jsonArray = json.jsonArray;
+                    try {
+                        List<Tweet> tweets = Tweet.fromJsonArray(jsonArray);
+                        // 3. Append the new data objects to the existing set of items inside the array of items
+                        // 4. Notify the adapter of the new items made with `notifyItemRangeInserted()`
+                        adapter.addAll(tweets);
+                    } catch (JSONException e) {
+                        e.printStackTrace();
+                    }
+                }
+
+                @Override
+                public void onFailure(int statusCode, Headers headers, String response, Throwable throwable) {
+                    Log.i(TAG,"onFailure for load more data" , throwable );
+
+                }
+            }, tweets.get(tweets.size()-1).id);
+
     }
 
     private void populateHomeTimeLine() {
